@@ -1,8 +1,9 @@
+// All imported dependencies
+
 const inquirer = require('inquirer');
-const fs = require('fs');
 const mysql = require('mysql2');
 const cTable = require('console.table');
-// const util = require('util');
+
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -11,7 +12,8 @@ const db = mysql.createConnection({
     database: "personnel_db"
 });
 
-// db.query = util.promisify(db.query);
+
+// Functions return promises to use in query functions
 
 function showDept() {
     return new Promise((resolve, reject) => {
@@ -42,6 +44,8 @@ function showEmployees() {
             })
     })
 };
+
+// Functions to view each individual table.
 
 function viewAllDepartments() {
     db.query('SELECT * FROM departments;', (err, result) => {
@@ -126,6 +130,8 @@ function run() {
         .catch(err => console.log(`Error: ${err}`));
 };
 
+// Add a department
+
 function addDepartment() {
     inquirer
         .prompt([
@@ -152,6 +158,8 @@ function addDepartment() {
             )
         })
 };
+
+// Add a role
 
 function addRole() {
     showDept().then(departments => {
@@ -196,6 +204,8 @@ function addRole() {
     })
 };
 
+// Add an employee
+
 function addEmployee() {
     showRoles().then(roles => {
         const roleChoices = roles.map(({ title: name, id: value }) => ({ name, value }));
@@ -220,7 +230,7 @@ function addEmployee() {
                 {
                     type: "input",
                     message: "Please enter the employee's manager",
-                    name: "managerName"
+                    name: "managerId"
                 },
             ])
             .then(response => {
@@ -230,7 +240,7 @@ function addEmployee() {
                         first_name: response.firstName,
                         last_name: response.lastName,
                         role_id: response.newEmployeeRole,
-                        manager_name: response.managerName
+                        manager_id: response.managerId
                     },
                     (err => {
                         if (err) throw err;
@@ -245,6 +255,8 @@ function addEmployee() {
 
     })
 };
+
+// Update an employee's role
 
 async function updateRole() {
     try {
@@ -271,14 +283,14 @@ async function updateRole() {
                 }
             ])
             .then(response => {
-                db.query("UPDATE employee SET role_id = ? WHERE role_id = ?;", [response.employeeNames, response.newEmployeeRoles],
+                db.query("UPDATE employees SET role_id = ? WHERE role_id = ?;", [response.employeeNames, response.newEmployeeRoles],
                     async function (err, res) {
                         if (err) throw err;
                         try {
                             console.log("\n");
                             console.log("Employee successfully reassigned new role!");
                             console.log("\n");
-                            await initiate();
+                            await run();
                         }
                         catch (err) {
                             console.log(err);
@@ -290,5 +302,7 @@ async function updateRole() {
         console.log(err);
     }
 }
+
+// Calls the index.js to start running the application
 
 module.exports = run;
